@@ -28,7 +28,7 @@ if subprocess.call(['make', '--always-make','-C', BASE_DIR]) != 0:
     raise RuntimeError('Cannot compile lanms in the directory: {}'.format(BASE_DIR))
 
 setuptools.setup(
-    name='lanms-ml',
+    name='lanms-py2',
 
     version='1.0.2',
 
@@ -54,7 +54,7 @@ setuptools.setup(
 
         'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
 
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 2.7',
     ],
 
     keywords='locality aware non-maximum suppression',
