@@ -28,7 +28,7 @@ if subprocess.call(['make', '--always-make','-C', BASE_DIR]) != 0:
     raise RuntimeError('Cannot compile lanms in the directory: {}'.format(BASE_DIR))
 
 setuptools.setup(
-    name='lanms',
+    name='lanms-ml',
 
     version='1.0.2',
 
