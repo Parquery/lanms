@@ -16,4 +16,4 @@ jobs:
     - uses: actions/upload-artifact@master
       with:
         name: dist
-        path: dist.tar.gz
+        path: dist/
