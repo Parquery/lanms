@@ -59,7 +59,7 @@ class CMakeBuild(build_ext):
 
 setup(
     name='lanms-proper',
-    version="1.0.0",
+    version="1.0.1",
     author='Some Guy',
     author_email='idk@whatever.xyz',
     ext_modules=[CMakeExtension('cmake_example')],
