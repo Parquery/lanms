@@ -1,7 +1,8 @@
-lanms/adaptor.so
+*.so
 __pycache__
 build
-lanms.egg-info
+*.egg-info
 .idea
 venv3
 dist
+*.pyc

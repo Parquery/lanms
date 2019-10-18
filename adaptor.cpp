@@ -7,7 +7,6 @@
 
 namespace py = pybind11;
 
-
 namespace lanms_adaptor {
 
 	std::vector<std::vector<float>> polys2floats(const std::vector<lanms::Polygon> &polys) {
@@ -50,12 +49,11 @@ namespace lanms_adaptor {
 
 }
 
-PYBIND11_PLUGIN(adaptor) {
-	py::module m("adaptor", "NMS");
+PYBIND11_PLUGIN(lanms_adaptor) {
+	py::module m("lanms_adaptor", "NMS");
 
 	m.def("merge_quadrangle_n9", &lanms_adaptor::merge_quadrangle_n9,
 			"merge quadrangels");
 
 	return m.ptr();
 }
-

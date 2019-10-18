@@ -1,68 +1,70 @@
-#! /usr/bin/env python3
-"""A setuptools based setup module.
-
-See:
-https://packaging.python.org/en/latest/distributing.html
-https://github.com/pypa/sampleproject
-"""
-
 import os
+import re
+import sys
+import platform
 import subprocess
 
-import setuptools
-from setuptools.dist import Distribution
+from setuptools import setup, Extension
+from setuptools.command.build_ext import build_ext
+from distutils.version import LooseVersion
 
 
-# This is a hack around python wheels not including the adaptor.so library.
-class BinaryDistribution(Distribution):
-    def is_pure(self):
-        return False
-
-    def has_ext_modules(self):
-        return True
+class CMakeExtension(Extension):
+    def __init__(self, name, sourcedir=''):
+        Extension.__init__(self, name, sources=[])
+        self.sourcedir = os.path.abspath(sourcedir)
 
 
-BASE_DIR = os.path.dirname(os.path.realpath(__file__))
+class CMakeBuild(build_ext):
+    def run(self):
+        try:
+            out = subprocess.check_output(['cmake', '--version'])
+        except OSError:
+            raise RuntimeError("CMake must be installed to build the following extensions: " +
+                               ", ".join(e.name for e in self.extensions))
 
-if subprocess.call(['make', '--always-make','-C', BASE_DIR]) != 0:
-    raise RuntimeError('Cannot compile lanms in the directory: {}'.format(BASE_DIR))
+        if platform.system() == "Windows":
+            cmake_version = LooseVersion(re.search(r'version\s*([\d.]+)', out.decode()).group(1))
+            if cmake_version < '3.1.0':
+                raise RuntimeError("CMake >= 3.1.0 is required on Windows")
 
-setuptools.setup(
-    name='lanms',
+        for ext in self.extensions:
+            self.build_extension(ext)
 
-    version='1.0.2',
+    def build_extension(self, ext):
+        extdir = os.path.abspath(os.path.dirname(self.get_ext_fullpath(ext.name)))
+        cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
+                      '-DPYTHON_EXECUTABLE=' + sys.executable]
 
-    description='Locality-Aware Non-Maximum Suppression',
+        cfg = 'Debug' if self.debug else 'Release'
+        build_args = ['--config', cfg]
 
-    # The project's main homepage.
-    url='https://github.com/Parquery/lanms',
+        if platform.system() == "Windows":
+            cmake_args += ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY_{}={}'.format(cfg.upper(), extdir)]
+            if sys.maxsize > 2**32:
+                cmake_args += ['-A', 'x64']
+            build_args += ['--', '/m']
+        else:
+            cmake_args += ['-DCMAKE_BUILD_TYPE=' + cfg]
+            build_args += ['--', '-j2']
 
-    # Author details
-    author='argmen (boostczc@gmail.com) is code author, '
-           'Dominik Walder (dominik.walder@parquery.com) and Marko Ristin (marko@parquery.com) only packaged the code',
-    author_email='devs@parquery.com',
+        env = os.environ.copy()
+        env['CXXFLAGS'] = '{} -DVERSION_INFO=\\"{}\\"'.format(env.get('CXXFLAGS', ''),
+                                                              self.distribution.get_version())
+        if not os.path.exists(self.build_temp):
+            os.makedirs(self.build_temp)
+        subprocess.check_call(['cmake', ext.sourcedir] + cmake_args, cwd=self.build_temp, env=env)
+        subprocess.check_call(['cmake', '--build', '.'] + build_args, cwd=self.build_temp)
 
-    # Choose your license
-    license='GNU General Public License v3.0',
 
-    # See https://pypi.python.org/pypi?%3Aaction=list_classifiers
-    classifiers=[
-        'Development Status :: 5 - Production/Stable',
-
-        'Intended Audience :: Developers',
-        'Topic :: Scientific/Engineering :: Artificial Intelligence',
-
-        'License :: OSI Approved :: GNU General Public License v3 (GPLv3)',
-
-        'Programming Language :: Python :: 3.5',
-    ],
-
-    keywords='locality aware non-maximum suppression',
-
-    packages=setuptools.find_packages(exclude=[]),
-
-    install_requires=["numpy"],
-
-    include_package_data=True,
-    distclass=BinaryDistribution,
+setup(
+    name='lanms-proper',
+    version="1.0.1",
+    author='Some Guy',
+    author_email='idk@whatever.xyz',
+    ext_modules=[CMakeExtension('cmake_example')],
+    install_requires=['numpy'],
+    packages=['lanms'],
+    cmdclass=dict(build_ext=CMakeBuild),
+    zip_safe=False,
 )
