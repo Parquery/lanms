@@ -7,5 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
+    - name: Initialize submodule
+      run: git submodule update --init --recursive
     - name: Build in manylinux container
       run: docker run --rm -v $DIR:/repo --rm safijari/manylinux2010-x64 /repo/build.sh
