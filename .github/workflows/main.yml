@@ -10,4 +10,4 @@ jobs:
     - name: Initialize submodule
       run: git submodule update --init --recursive
     - name: Build in manylinux container
-      run: docker run --rm -v $DIR:/repo --rm safijari/manylinux2010-x64 /repo/build.sh
+      run: docker run --rm -v `pwd`:/repo --rm safijari/manylinux2010-x64 /repo/build.sh
